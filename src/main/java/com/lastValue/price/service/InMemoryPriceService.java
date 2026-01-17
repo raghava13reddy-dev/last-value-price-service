@@ -1,5 +1,7 @@
 package com.lastValue.price.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.lastValue.price.exception.InvalidBatchStateException;
@@ -16,6 +18,8 @@ public class InMemoryPriceService implements PriceProducerService, PriceConsumer
 
 	private final BatchManager batchManager = new BatchManager();
 	private final PriceStore priceStore = new PriceStore();
+
+	private static final Logger log = LoggerFactory.getLogger(InMemoryPriceService.class);
 
 	@Override
 	public UUID startBatch() {
@@ -45,6 +49,7 @@ public class InMemoryPriceService implements PriceProducerService, PriceConsumer
 	@Override
 	public synchronized void completeBatch(UUID batchId) {
 		BatchContext ctx = batchManager.getActiveBatch(batchId);
+		log.info("Committing batch {} with {} instruments", batchId, ctx.getStagedPrices().size());
 		priceStore.commit(ctx.getStagedPrices());
 		batchManager.complete(batchId);
 	}
